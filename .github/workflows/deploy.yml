@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main  # Se ejecuta automáticamente al hacer push a la rama main
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/${{ github.event.repository.name }}
@@ -20,6 +19,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # Convertir el nombre de la imagen a minúsculas para cumplir con el estándar de Docker
+      - name: Lowercase IMAGE_NAME
+        run: |
+          echo "IMAGE_NAME=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       # 1. Configurar JDK 21 y la caché automática para Gradle
       - name: Set up JDK 21
