@@ -26,6 +26,11 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
+    // 1. OBLIGATORIO: Spring Security (para gestionar filtros y autorizaciones)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // 2. OBLIGATORIO SI USAS JWT: Soporte para validar tokens de autorización (OAuth2 Resource Server)
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 }
 
 tasks.named('test') {
