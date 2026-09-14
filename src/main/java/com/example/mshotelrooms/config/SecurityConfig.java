@@ -1,8 +1,8 @@
 package com.example.mshotelrooms.config;
 
-import com.example.mshotelrooms.security.CognitoJwtAuthenticationConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,22 +10,21 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.example.mshotelrooms.security.CognitoJwtAuthenticationConverter;
+
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true) // Habilita @PreAuthorize en los controladores
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-
-    public SecurityConfig(SecretGatewayFilter secretGatewayFilter) {
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, SecretGatewayFilter secretGatewayFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                // Añadimos nuestro filtro del secreto antes del filtro de autenticación
                 .addFilterBefore(secretGatewayFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        // .requestMatchers("/api/health").permitAll() // Por si deseas dejar el health libre
+                        .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/rooms/**").permitAll() // Catálogo público
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
