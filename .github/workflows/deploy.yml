@@ -105,7 +105,7 @@ jobs:
                 -e PORT=8080 \
                 -e PUBLIC_HOST_URL='http://$TARGET_HOST_IP' \
                 -e API_GATEWAY_SECRET='${{ secrets.API_GATEWAY_SECRET }}' \
-                -e DB_URL='jdbc:postgresql://aws-0-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require' \
+                -e DB_URL='jdbc:postgresql://aws-0-ca-central-1.pooler.supabase.com:5432/postgres' \
                 -e DB_USER='${{ secrets.SUPABASE_DB_USER }}' \
                 -e DB_PASSWORD='${{ secrets.SUPABASE_DB_PASSWORD }}' \
                 --restart unless-stopped \
