@@ -96,6 +96,13 @@ jobs:
               # --- PASOS IDEMPOTENTES DEL CONTENEDOR ---
               docker stop ${{ env.CONTAINER_NAME }} || true
               docker rm ${{ env.CONTAINER_NAME }} || true
+              # Liberar el puerto 80 si quedó ocupado por un contenedor anterior
+              docker ps -q --filter publish=80 | xargs -r docker rm -f
+              if sudo ss -ltnp | grep -q ':80 '; then
+                echo 'El puerto 80 sigue ocupado por un proceso del sistema:'
+                sudo ss -ltnp | grep ':80 '
+                exit 1
+              fi
               docker image prune -f
             
               # --- MAPEO CRUZADO: Puerto 80 del Servidor al 8080 del Contenedor ---
