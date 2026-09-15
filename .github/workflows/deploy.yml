@@ -7,7 +7,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/${{ github.event.repository.name }}
-  CONTAINER_NAME: spring-app-ejemplo
+  CONTAINER_NAME: ms-hotel-rooms
 
 jobs:
   build-and-deploy:
@@ -105,6 +105,9 @@ jobs:
                 -e PORT=8080 \
                 -e PUBLIC_HOST_URL='http://$TARGET_HOST_IP' \
                 -e API_GATEWAY_SECRET='${{ secrets.API_GATEWAY_SECRET }}' \
+                -e DB_URL='jdbc:postgresql://aws-0-ca-central-1.pooler.supabase.com:5432/postgres?sslmode=require' \
+                -e DB_USER='${{ secrets.SUPABASE_DB_USER }}' \
+                -e DB_PASSWORD='${{ secrets.SUPABASE_DB_PASSWORD }}' \
                 --restart unless-stopped \
                 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             "

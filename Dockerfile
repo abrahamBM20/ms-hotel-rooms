@@ -7,6 +7,6 @@ COPY build/libs/*.jar app.jar
 RUN useradd -m springuser && chown -R springuser /app
 USER springuser
 
-EXPOSE 80
+EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
