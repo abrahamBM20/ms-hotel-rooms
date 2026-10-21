@@ -35,3 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Secretos ###
+# El archivo real de variables de entorno: NUNCA se commitea.
+config/secrets.env
