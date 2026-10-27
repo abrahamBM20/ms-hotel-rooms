@@ -25,13 +25,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testCompileOnly 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'com.h2database:h2'
     testAnnotationProcessor 'org.projectlombok:lombok'
-    // 1. OBLIGATORIO: Spring Security (para gestionar filtros y autorizaciones)
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-
-    // 2. OBLIGATORIO SI USAS JWT: Soporte para validar tokens de autorización (OAuth2 Resource Server)
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'
 

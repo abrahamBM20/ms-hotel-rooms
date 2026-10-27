@@ -6,7 +6,6 @@ import com.example.mshotelrooms.repository.RoomRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -23,7 +22,7 @@ public class RoomController {
         this.roomRepository = roomRepository;
     }
 
-    // --- ACCESO PÚBLICO (Requiere que el Header X-Secret-Gateway exista) ---
+    // El servicio es privado: la autenticación y autorización las realiza el BFF.
 
     @GetMapping
     public List<Room> getAllRooms() {
@@ -36,10 +35,7 @@ public class RoomController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Habitación no encontrada"));
     }
 
-    // --- RESTRINGIDO A ADMIN (Verifica token Cognito y Rol) ---
-
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Room> createRoom(@Valid @RequestBody RoomRequestDto dto) {
         if (roomRepository.existsByRoomNumber(dto.roomNumber())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El número de habitación ya existe");
@@ -58,7 +54,6 @@ public class RoomController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Room> updateRoom(@PathVariable UUID id, @Valid @RequestBody RoomRequestDto dto) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Habitación no encontrada"));
@@ -78,7 +73,6 @@ public class RoomController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRoom(@PathVariable UUID id) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Habitación no encontrada"));
