@@ -60,7 +60,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ vars.TARGET_HOST_IP }}  # Lee tu IP 18.216.244.5
-          username: ubuntu                 # Usuario Amazon Linux
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}     # Tu llave .pem
           port: 22
           envs: TARGET_HOST_IP
@@ -78,44 +78,51 @@ jobs:
             # --- APROVISIONAMIENTO IDEMPOTENTE DE DOCKER ---
             if ! command -v docker &> /dev/null; then
               echo "Docker no está instalado. Iniciando instalación..."
-              sudo dnf update -y
-              sudo dnf install -y docker
-              sudo systemctl start docker
-              sudo systemctl enable docker
-              sudo usermod -aG docker ec2-user
-            fi
-            
-            # --- EJECUCIÓN SEGURA CON PERMISOS REFRESCADOS ---
-            sg docker -c "
-              # Autenticar el Docker local del EC2 en GHCR
-              echo '${{ secrets.GH_CR_PAT }}' | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-            
-              # Descargar la última versión de la imagen
-              docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            
-              # --- PASOS IDEMPOTENTES DEL CONTENEDOR ---
-              docker stop ${{ env.CONTAINER_NAME }} || true
-              docker rm ${{ env.CONTAINER_NAME }} || true
-              # Liberar el puerto 80 si quedó ocupado por un contenedor anterior
-              docker ps -q --filter publish=80 | xargs -r docker rm -f
-              if sudo ss -ltnp | grep -q ':80 '; then
-                echo 'El puerto 80 sigue ocupado por un proceso del sistema:'
-                sudo ss -ltnp | grep ':80 '
+              if command -v apt-get &> /dev/null; then
+                sudo apt-get update -y
+                sudo apt-get install -y docker.io
+              elif command -v dnf &> /dev/null; then
+                sudo dnf update -y
+                sudo dnf install -y docker
+              elif command -v yum &> /dev/null; then
+                sudo yum update -y
+                sudo yum install -y docker
+              else
+                echo "No se encontró apt-get, dnf ni yum; no se puede instalar Docker."
                 exit 1
               fi
-              docker image prune -f
+              sudo systemctl start docker
+              sudo systemctl enable docker
+            fi
             
-              # --- MAPEO CRUZADO: Puerto 80 del Servidor al 8080 del Contenedor ---
-              docker run -d \
-                --name ${{ env.CONTAINER_NAME }} \
-                -p 80:8080 \
-                -e PORT=8080 \
-                -e PUBLIC_HOST_URL='http://$TARGET_HOST_IP' \
-                -e DB_URL='jdbc:postgresql://aws-0-ca-central-1.pooler.supabase.com:6543/postgres?sslmode=require' \
-                -e DB_USER='${{ secrets.SUPABASE_DB_USER }}' \
-                -e DB_PASSWORD='${{ secrets.SUPABASE_DB_PASSWORD }}' \
-                --restart unless-stopped \
-                ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            "
+            # --- EJECUCIÓN CON PERMISOS DE DOCKER ---
+            echo '${{ secrets.GH_CR_PAT }}' | sudo docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+            
+            # Descargar la última versión de la imagen
+            sudo docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            
+            # --- PASOS IDEMPOTENTES DEL CONTENEDOR ---
+            sudo docker stop ${{ env.CONTAINER_NAME }} || true
+            sudo docker rm ${{ env.CONTAINER_NAME }} || true
+            # Liberar el puerto 80 si quedó ocupado por un contenedor anterior
+            sudo docker ps -q --filter publish=80 | xargs -r sudo docker rm -f
+            if sudo ss -ltnp | grep -q ':80 '; then
+              echo 'El puerto 80 sigue ocupado por un proceso del sistema:'
+              sudo ss -ltnp | grep ':80 '
+              exit 1
+            fi
+            sudo docker image prune -f
+            
+            # --- MAPEO: Puerto 80 del servidor al 8080 del contenedor ---
+            sudo docker run -d \
+              --name ${{ env.CONTAINER_NAME }} \
+              -p 80:8080 \
+              -e PORT=8080 \
+              -e PUBLIC_HOST_URL="http://$TARGET_HOST_IP" \
+              -e DB_URL='jdbc:postgresql://aws-0-ca-central-1.pooler.supabase.com:6543/postgres?sslmode=require' \
+              -e DB_USER='${{ secrets.SUPABASE_DB_USER }}' \
+              -e DB_PASSWORD='${{ secrets.SUPABASE_DB_PASSWORD }}' \
+              --restart unless-stopped \
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         env:
           TARGET_HOST_IP: ${{ vars.TARGET_HOST_IP }}
