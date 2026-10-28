@@ -12,7 +12,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, String
     @Query("""
             SELECT r FROM Reservation r
             WHERE (:status IS NULL OR r.status = :status)
-              AND (:roomNumber IS NULL OR LOWER(r.roomNumber) = LOWER(:roomNumber))
+              AND (:roomNumber IS NULL OR r.roomNumber = :roomNumber)
               AND (:guestId IS NULL OR r.guestId = :guestId)
               AND (:id IS NULL OR r.id = :id)
             ORDER BY r.requestedAt DESC, r.createdAt DESC
